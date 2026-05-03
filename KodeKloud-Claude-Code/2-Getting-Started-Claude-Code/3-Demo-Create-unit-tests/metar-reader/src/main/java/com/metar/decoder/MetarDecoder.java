@@ -562,7 +562,8 @@ public class MetarDecoder {
             }
         }
 
-        double visSM = metar.getVisibilityMeters() != null ? metar.getVisibilityMeters() / 1609.34 : 999.0;
+        double visSM = metar.getVisibilityMeters() != null
+                ? Math.round(metar.getVisibilityMeters() / 1609.34 * 100) / 100.0 : 999.0;
         int ceiling = lowestCeiling != null ? lowestCeiling : 99999;
 
         String category, description;

@@ -1,13 +1,16 @@
+PS D:\AI\claude-code-kodekloud\KodeKloud-Claude-Code\2-Getting-Started-Claude-Code\3-Demo-Create-unit-tests\metar-reader> claude
+D:\AI\claude-code-kodekloud\KodeKloud-Claude-Code\2-Getting-Started-Claude-Code\3-Demo-Create-unit-tests\metar-reader
 
-Claude prompt:
-1. Please eadd comments to all java files methods of what they do 
-2. Add a nide README.md to project metar-reader to explain what is this project about 
+ ▐▛███▜▌   Claude Code v2.1.126
+▝▜█████▛▘  Sonnet 4.6 with high effort · Claude Pro
+  ▘▘ ▝▝    D:\AI\claude-code-kodekloud\KodeKloud-Claude-Code\2-Getting-Started-Claude-Code\3-Demo-Create-unit-tests\metar-rea…
 
-Claude prompt:
-Okay add a commit message for tehse changes and push the changes 
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────
+❯  
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  ? for shortcuts        
 
-It says now it's fully documented and ready for GitHub release. 
-Users will be able to understand the purpose, install easily use effectively contribute and deploy. 
-Your Quarkus METAR Reader is now professional-grade and ready to help aviation enthusiasts and weather lovers convert cryptic aviation weather codes into crystal-clear forecasts.
+  Prompt for Junit test on 1 class 
+   I would like to create a set of unit tests for MetarService.java. Help me decide which type and help me implement them. I want to use Mock Metar readings and test they are interpreted correctly. 
 
-Checkout the README.md on github 
+yes   
