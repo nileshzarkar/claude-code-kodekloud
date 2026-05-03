@@ -10,6 +10,13 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * Core METAR parsing engine. Tokenizes a raw METAR string and decodes each field
+ * (report type, station, time, wind, visibility, weather phenomena, clouds,
+ * temperature/dew point, altimeter, remarks) into a structured {@link DecodedMetar} object.
+ * All lookup tables (weather codes, cloud coverage, compass directions) are initialized
+ * once at class load in static initializer blocks.
+ */
 @ApplicationScoped
 public class MetarDecoder {
 
@@ -92,6 +99,20 @@ public class MetarDecoder {
         "^([-+]|VC)?(MI|BC|PR|DR|BL|SH|TS|FZ)?(DZ|RA|SN|SG|IC|PL|GR|GS|UP|BR|FG|FU|VA|DU|SA|HZ|PO|SQ|FC|SS|DS)+$"
     );
 
+    /**
+     * Parses a raw METAR string into a structured {@link DecodedMetar} object.
+     * <p>
+     * The method tokenizes the input on whitespace and advances a cursor through
+     * each recognized METAR field in order: report type, station identifier,
+     * date/time, wind, CAVOK/visibility, RVR (skipped), weather phenomena,
+     * cloud layers/sky condition, temperature/dew point, altimeter, and remarks.
+     * After parsing, the flight category (VFR/MVFR/IFR/LIFR) is derived from
+     * the ceiling and visibility values.
+     *
+     * @param rawMetar    the raw METAR observation string (e.g. "METAR KLAX 011755Z 27015KT 10SM FEW040 22/10 A2992")
+     * @param stationName human-readable airport name returned by the API (used for display only)
+     * @return a fully populated {@link DecodedMetar}; on empty input returns an object with an error field set
+     */
     public DecodedMetar decode(String rawMetar, String stationName) {
         DecodedMetar result = new DecodedMetar();
         result.setRawMetar(rawMetar);
@@ -270,6 +291,17 @@ public class MetarDecoder {
         return result;
     }
 
+    /**
+     * Parses the visibility portion of the METAR token list starting at index {@code i}.
+     * Handles metric visibility in meters (e.g. "9999", "0800"), whole statute-mile
+     * values (e.g. "10SM"), fractional statute-mile values (e.g. "1/2SM"), and the
+     * two-token "whole + fraction" format (e.g. "1 1/2SM").
+     *
+     * @param tokens the full list of METAR tokens
+     * @param i      the current cursor position pointing at the first visibility token
+     * @param result the {@link DecodedMetar} object to populate with visibility data
+     * @return the updated cursor position after consuming all visibility token(s)
+     */
     private int parseVisibility(List<String> tokens, int i, DecodedMetar result) {
         String token = tokens.get(i);
         Matcher metricMatcher = VIS_METRIC_PATTERN.matcher(token);
@@ -323,6 +355,15 @@ public class MetarDecoder {
         return i;
     }
 
+    /**
+     * Builds a {@link WindInfo} object from a pre-matched wind token.
+     * Converts MPS speeds to knots, determines whether the wind is calm or variable,
+     * and constructs a human-readable description. Gust speed is included when present.
+     *
+     * @param token   the raw wind token string (e.g. "27015G25KT")
+     * @param matcher a {@link Matcher} already matched against {@code WIND_PATTERN}
+     * @return a populated {@link WindInfo} with direction, speed, gusts, and description
+     */
     private WindInfo parseWind(String token, Matcher matcher) {
         WindInfo wind = new WindInfo();
         String dirStr = matcher.group(1);
@@ -363,6 +404,13 @@ public class MetarDecoder {
         return wind;
     }
 
+    /**
+     * Converts a wind direction in degrees to a human-readable compass direction name
+     * (e.g. 270 → "West", 45 → "Northeast"). Uses 16-point compass rose with 22.5° sectors.
+     *
+     * @param degrees wind direction in degrees true (0–360)
+     * @return the full compass direction name (e.g. "North-Northwest")
+     */
     private String getCompassDirection(int degrees) {
         String[] dirs = {"N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE",
                 "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"};
@@ -371,11 +419,28 @@ public class MetarDecoder {
         return COMPASS_DIRECTIONS.getOrDefault(dir, dir);
     }
 
+    /**
+     * Determines whether a METAR token represents a weather phenomenon code.
+     * Excludes known non-phenomenon keywords (RMK, NOSIG, TEMPO, BECMG) before
+     * testing the token against the weather phenomenon regex pattern.
+     *
+     * @param token the METAR token to evaluate
+     * @return {@code true} if the token matches a weather phenomenon pattern; {@code false} otherwise
+     */
     private boolean isWeatherPhenomenon(String token) {
         if (token.equals("RMK") || token.equals("NOSIG") || token.equals("TEMPO") || token.equals("BECMG")) return false;
         return WEATHER_PATTERN.matcher(token).matches();
     }
 
+    /**
+     * Decodes a single weather phenomenon token into a {@link WeatherPhenomenon} with
+     * a human-readable description. Handles intensity prefixes ({@code +} heavy, {@code -} light,
+     * {@code VC} in vicinity), an optional descriptor (e.g. SH showers, TS thunderstorm),
+     * and one or more two-letter phenomenon codes from precipitation, obscuration, or other categories.
+     *
+     * @param token the raw weather phenomenon token (e.g. "-RASN", "+TSRA", "VCFG")
+     * @return a {@link WeatherPhenomenon} containing the original code and its expanded description
+     */
     private WeatherPhenomenon parseWeatherPhenomenon(String token) {
         StringBuilder description = new StringBuilder();
         String remaining = token;
@@ -425,21 +490,60 @@ public class MetarDecoder {
         return new WeatherPhenomenon(token, description.toString().trim());
     }
 
+    /**
+     * Parses a METAR temperature string into a double value in degrees Celsius.
+     * The METAR convention uses the prefix "M" to denote negative (minus) temperatures
+     * (e.g. "M05" → -5.0°C).
+     *
+     * @param s the temperature string from a METAR (e.g. "22", "M05")
+     * @return the temperature as a signed double in degrees Celsius
+     */
     private double parseTemperature(String s) {
         if (s.startsWith("M")) return -Double.parseDouble(s.substring(1));
         return Double.parseDouble(s);
     }
 
+    /**
+     * Converts a temperature from Celsius to Fahrenheit.
+     *
+     * @param c temperature in degrees Celsius
+     * @return equivalent temperature in degrees Fahrenheit
+     */
     private double celsiusToFahrenheit(double c) {
         return c * 9.0 / 5.0 + 32;
     }
 
+    /**
+     * Estimates relative humidity using the Magnus formula applied to temperature and dew point.
+     * Returns the result rounded to the nearest whole percentage.
+     *
+     * @param temp temperature in degrees Celsius
+     * @param dew  dew point in degrees Celsius
+     * @return relative humidity as a percentage (0–100), rounded to the nearest integer
+     */
     private long calculateHumidity(double temp, double dew) {
         double rh = 100.0 * Math.exp((17.625 * dew) / (243.04 + dew))
                 / Math.exp((17.625 * temp) / (243.04 + temp));
         return Math.round(rh);
     }
 
+    /**
+     * Derives the FAA flight category (VFR, MVFR, IFR, or LIFR) from the decoded METAR's
+     * ceiling and visibility values and writes the result back into the {@link DecodedMetar}.
+     * <p>
+     * CAVOK automatically yields VFR. Otherwise, the lowest BKN/OVC cloud layer is used as
+     * the ceiling, and visibility in statute miles is converted from stored meters.
+     * Category thresholds follow standard FAA definitions:
+     * <ul>
+     *   <li>LIFR — ceiling &lt; 500 ft OR visibility &lt; 1 SM</li>
+     *   <li>IFR  — ceiling 500–999 ft OR visibility 1–2.99 SM</li>
+     *   <li>MVFR — ceiling 1,000–2,999 ft OR visibility 3–4.99 SM</li>
+     *   <li>VFR  — ceiling ≥ 3,000 ft AND visibility ≥ 5 SM</li>
+     * </ul>
+     *
+     * @param metar the partially decoded METAR object; its flightCategory and
+     *              flightCategoryDescription fields are set by this method
+     */
     private void calculateFlightCategory(DecodedMetar metar) {
         if (metar.isCavok()) {
             metar.setFlightCategory("VFR");

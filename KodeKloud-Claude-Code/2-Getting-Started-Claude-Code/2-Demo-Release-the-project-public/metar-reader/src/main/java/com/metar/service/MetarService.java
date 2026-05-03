@@ -12,6 +12,11 @@ import org.eclipse.microprofile.rest.client.inject.RestClient;
 
 import java.util.List;
 
+/**
+ * Application service that orchestrates METAR retrieval and decoding.
+ * Validates the incoming airport code, calls the Aviation Weather API via
+ * {@link AviationWeatherClient}, and delegates raw METAR parsing to {@link MetarDecoder}.
+ */
 @ApplicationScoped
 public class MetarService {
 
@@ -21,6 +26,20 @@ public class MetarService {
     @Inject
     MetarDecoder decoder;
 
+    /**
+     * Fetches and decodes the latest METAR report for the given ICAO airport code.
+     * <p>
+     * Validates that the code is 3–4 characters, calls the external Aviation Weather API,
+     * and returns a fully decoded {@link DecodedMetar} object. Throws
+     * {@link WebApplicationException} with appropriate HTTP status codes on input errors,
+     * upstream API failures, or missing data.
+     *
+     * @param airportCode ICAO airport code (3–4 uppercase characters, e.g. "KLAX")
+     * @return decoded METAR as a populated {@link DecodedMetar} object
+     * @throws WebApplicationException HTTP 400 if the code length is invalid,
+     *                                 HTTP 503 if the Aviation Weather API is unreachable,
+     *                                 HTTP 404 if no METAR data exists for the requested station
+     */
     public DecodedMetar getMetar(String airportCode) {
         String code = airportCode.toUpperCase().trim();
 
