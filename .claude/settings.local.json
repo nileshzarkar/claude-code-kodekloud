@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-ChildItem -Path \"d:\\\\AI\\\\claude-code-kodekloud\\\\KodeKloud-Claude-Code\\\\1-Demo-Bulding-a-project-from-scratch\" -Recurse -Force)",
+      "Bash(Select-Object FullName)",
+      "Bash(Sort-Object FullName)"
+    ]
+  }
+}

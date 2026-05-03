@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-ChildItem -Path \"d:\\\\AI\\\\KodeKloud-Claude-Code\\\\metar-reader\" -Recurse -File)",
+      "Bash(Select-Object FullName)",
+      "Bash(Format-Table -AutoSize)"
+    ]
+  }
+}
