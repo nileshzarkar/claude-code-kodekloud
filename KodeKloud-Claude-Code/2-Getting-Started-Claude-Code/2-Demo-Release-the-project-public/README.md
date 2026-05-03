@@ -1,1 +1,0 @@
-To get this ready publicly we need to create some gitignore file , documentation file and 
