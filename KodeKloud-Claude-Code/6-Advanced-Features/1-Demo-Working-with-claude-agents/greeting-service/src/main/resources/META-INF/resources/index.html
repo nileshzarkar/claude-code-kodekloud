@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Greeting Service</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 48px 40px;
+            width: 100%;
+            max-width: 460px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+            text-align: center;
+        }
+
+        .icon {
+            font-size: 56px;
+            margin-bottom: 16px;
+        }
+
+        h1 {
+            color: #2d3748;
+            font-size: 26px;
+            margin-bottom: 8px;
+        }
+
+        p.subtitle {
+            color: #718096;
+            font-size: 14px;
+            margin-bottom: 32px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 24px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input[type="text"]:focus {
+            border-color: #667eea;
+        }
+
+        button {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s, transform 0.1s;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        button:active {
+            transform: scale(0.97);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .result {
+            display: none;
+            background: #f0fff4;
+            border: 2px solid #9ae6b4;
+            border-radius: 10px;
+            padding: 20px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .result.error {
+            background: #fff5f5;
+            border-color: #fc8181;
+        }
+
+        .result p {
+            color: #2d3748;
+            font-size: 18px;
+            font-weight: 500;
+            line-height: 1.5;
+        }
+
+        .result.error p {
+            color: #c53030;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-8px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .loader {
+            display: none;
+            margin: 12px auto 0;
+            width: 28px;
+            height: 28px;
+            border: 3px solid #e2e8f0;
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="icon">👋</div>
+        <h1>Greeting Service</h1>
+        <p class="subtitle">Enter your name and get a personalised greeting!</p>
+
+        <div class="input-group">
+            <input type="text" id="nameInput" placeholder="Your name..." maxlength="100" />
+            <button id="greetBtn" onclick="sendGreeting()">Greet</button>
+        </div>
+
+        <div class="loader" id="loader"></div>
+
+        <div class="result" id="result">
+            <p id="resultText"></p>
+        </div>
+    </div>
+
+    <script>
+        const input = document.getElementById('nameInput');
+        const btn   = document.getElementById('greetBtn');
+        const loader  = document.getElementById('loader');
+        const resultBox  = document.getElementById('result');
+        const resultText = document.getElementById('resultText');
+
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') sendGreeting();
+        });
+
+        async function sendGreeting() {
+            const name = input.value.trim();
+            if (!name) {
+                showResult('Please enter a name.', true);
+                return;
+            }
+
+            btn.disabled = true;
+            loader.style.display = 'block';
+            resultBox.style.display = 'none';
+
+            try {
+                const response = await fetch('/api/greet', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showResult(data.message, false);
+                } else {
+                    showResult(data.error || 'Something went wrong.', true);
+                }
+            } catch (err) {
+                showResult('Could not reach the server. Is Quarkus running?', true);
+            } finally {
+                btn.disabled = false;
+                loader.style.display = 'none';
+            }
+        }
+
+        function showResult(text, isError) {
+            resultText.textContent = text;
+            resultBox.className = 'result' + (isError ? ' error' : '');
+            resultBox.style.display = 'block';
+        }
+    </script>
+</body>
+</html>

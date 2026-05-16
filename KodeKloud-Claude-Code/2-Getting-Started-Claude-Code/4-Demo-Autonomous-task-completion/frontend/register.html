@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register — Auth System</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="card">
+    <h1>Create Account</h1>
+    <p class="subtitle">Register with your email address</p>
+
+    <form id="registerForm" novalidate>
+        <div class="form-group">
+            <label for="email">Email Address</label>
+            <input type="email" id="email" placeholder="you@example.com" autocomplete="email" required>
+        </div>
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" placeholder="At least 8 characters" autocomplete="new-password" required>
+            <span class="hint">Minimum 8 characters</span>
+        </div>
+        <button type="submit" class="btn btn-primary" id="submitBtn">Create Account</button>
+    </form>
+
+    <div id="msgBox" class="alert alert-error"></div>
+
+    <div class="link-row">
+        Already have an account? <a href="login.html">Sign in</a>
+    </div>
+</div>
+
+<script src="app.js"></script>
+<script>
+    redirectIfLoggedIn();
+
+    document.getElementById('registerForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        hideAlert('msgBox');
+
+        const email    = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+        const btn      = document.getElementById('submitBtn');
+
+        // Client-side validation
+        if (!email) { showAlert('msgBox', 'Email is required'); return; }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showAlert('msgBox', 'Enter a valid email address'); return; }
+        if (password.length < 8) { showAlert('msgBox', 'Password must be at least 8 characters'); return; }
+
+        setLoading(btn, true);
+        try {
+            const { ok, data } = await apiFetch('/register', {
+                method: 'POST',
+                body: JSON.stringify({ email, password }),
+            });
+
+            if (ok) {
+                showAlert('msgBox',
+                    (data?.message || 'Registered!') + ' Check the backend console for the verification link.',
+                    'success');
+                document.getElementById('registerForm').reset();
+            } else {
+                showAlert('msgBox', data?.error || 'Registration failed. Please try again.');
+            }
+        } catch (err) {
+            showAlert('msgBox', 'Cannot reach the server. Is the Quarkus backend running on port 8080?');
+        } finally {
+            setLoading(btn, false);
+        }
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard — Auth System</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="card">
+    <div class="dashboard-header">
+        <h1>Dashboard</h1>
+        <button class="btn btn-danger" id="logoutBtn" style="width:auto;padding:0.5rem 1.25rem;margin:0">Logout</button>
+    </div>
+
+    <div id="loadingMsg" class="alert alert-info" style="display:block">Loading your profile…</div>
+    <div id="errorMsg"   class="alert alert-error"></div>
+
+    <div id="userInfo" style="display:none">
+        <div class="user-info-card">
+            <div class="field">
+                <span class="key">User ID</span>
+                <span class="value" id="userId">—</span>
+            </div>
+            <div class="field">
+                <span class="key">Email</span>
+                <span class="value" id="userEmail">—</span>
+            </div>
+            <div class="field">
+                <span class="key">Verified</span>
+                <span class="value" id="userVerified">—</span>
+            </div>
+        </div>
+        <p style="text-align:center;color:#6b7280;font-size:0.85rem;margin-top:0.5rem">
+            JWT token is stored in <code>localStorage</code>
+        </p>
+    </div>
+</div>
+
+<script src="app.js"></script>
+<script>
+    // Redirect to login if no token
+    if (!requireAuth()) {
+        // requireAuth already redirects; stop execution
+    } else {
+        loadProfile();
+    }
+
+    async function loadProfile() {
+        try {
+            const { ok, status, data } = await apiFetchAuth('/me');
+
+            document.getElementById('loadingMsg').style.display = 'none';
+
+            if (ok && data) {
+                document.getElementById('userId').textContent    = data.userId;
+                document.getElementById('userEmail').textContent = data.email;
+
+                const verifiedEl = document.getElementById('userVerified');
+                verifiedEl.innerHTML = data.isVerified
+                    ? '<span class="badge badge-green">✓ Verified</span>'
+                    : '<span class="badge badge-red">✗ Not Verified</span>';
+
+                document.getElementById('userInfo').style.display = 'block';
+            } else if (status === 401) {
+                // Token expired or invalid — clear and redirect
+                TokenStore.remove();
+                window.location.href = 'login.html';
+            } else {
+                showAlert('errorMsg', data?.error || 'Failed to load profile.');
+            }
+        } catch (err) {
+            document.getElementById('loadingMsg').style.display = 'none';
+            showAlert('errorMsg', 'Cannot reach the server. Is the Quarkus backend running on port 8080?');
+        }
+    }
+
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+        TokenStore.remove();
+        window.location.href = 'login.html';
+    });
+</script>
+</body>
+</html>

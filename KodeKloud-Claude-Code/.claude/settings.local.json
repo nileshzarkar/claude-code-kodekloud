@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir -p \"D:\\\\AI\\\\claude-code-kodekloud\\\\KodeKloud-Claude-Code\\\\6-Advanced-Features\\\\1-Demo-Working-with-claude-agents\\\\greeting-service\\\\src\\\\main\\\\java\\\\com\\\\greeting\\\\service\")",
+      "Bash(mkdir -p \"D:\\\\AI\\\\claude-code-kodekloud\\\\KodeKloud-Claude-Code\\\\6-Advanced-Features\\\\1-Demo-Working-with-claude-agents\\\\greeting-service\\\\src\\\\main\\\\java\\\\com\\\\greeting\\\\resource\")",
+      "Bash(mkdir -p \"D:\\\\AI\\\\claude-code-kodekloud\\\\KodeKloud-Claude-Code\\\\6-Advanced-Features\\\\1-Demo-Working-with-claude-agents\\\\greeting-service\\\\src\\\\main\\\\resources\\\\META-INF\\\\resources\")",
+      "Bash(Get-ChildItem -Recurse \"D:\\\\AI\\\\claude-code-kodekloud\\\\KodeKloud-Claude-Code\\\\6-Advanced-Features\\\\1-Demo-Working-with-claude-agents\\\\greeting-service\")",
+      "Bash(Select-Object FullName)"
+    ]
+  }
+}
