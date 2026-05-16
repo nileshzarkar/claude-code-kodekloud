@@ -7,6 +7,10 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 
+/**
+ * Orchestrates METAR retrieval and decoding.
+ * Calls the Aviation Weather API client and delegates raw text parsing to MetarDecoder.
+ */
 @ApplicationScoped
 public class MetarService {
 
@@ -16,6 +20,13 @@ public class MetarService {
     @Inject
     MetarDecoder decoder;
 
+    /**
+     * Fetches and decodes a METAR report for the given ICAO airport code.
+     * Returns a DecodedMetar with an error field populated if no data is found.
+     *
+     * @param icaoCode ICAO airport code (e.g. KJFK, EGLL, VABB)
+     * @return decoded METAR data, or an error response if the code is unknown
+     */
     public DecodedMetar getMetar(String icaoCode) {
         String raw = aviationWeatherClient.getMetar(icaoCode.toUpperCase(), "raw");
 

@@ -10,6 +10,10 @@ import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 
+/**
+ * REST endpoint exposing METAR lookup at GET /api/metar/{code}.
+ * Validates the ICAO code, delegates to MetarService, and maps results to HTTP responses.
+ */
 @Path("/api/metar")
 @Produces(MediaType.APPLICATION_JSON)
 @Tag(name = "METAR", description = "Fetch and decode aviation weather reports")
@@ -18,6 +22,13 @@ public class MetarResource {
     @Inject
     MetarService metarService;
 
+    /**
+     * Returns a decoded METAR report for the given ICAO airport code.
+     *
+     * @param code 3–4 character ICAO airport code (e.g. KJFK, EGLL, VABB)
+     * @return 200 with decoded METAR, 400 for an invalid code format,
+     *         404 if no data exists for the code, or 503 if the upstream service is unavailable
+     */
     @GET
     @Path("/{code}")
     @Blocking
