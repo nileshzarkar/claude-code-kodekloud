@@ -143,3 +143,28 @@ PS D:\AI\claude-code-kodekloud\KodeKloud-Claude-Code\2-Getting-Started-Claude-Co
   Would you like me to:
   1. Create the .gitignore for you first (recommended), then stage only the source files and commit with the message above?
   2. Just use the commit message as-is and handle staging yourself?
+
+
+
+  
+───────────────────────────────────────────────────────────────────────────────────────────
+❯ Since I want to release this publicly. PLease add some comments to MetarService.java and 
+  MetarResource.java and AviationWeatherClient.java 
+─────────────────────────────────────────────────────────────────
+
+● All three files updated. Here's a summary of what was added:
+
+  - AviationWeatherClient.java — class Javadoc explaining the API base URL config key; method Javadoc for
+   getMetar describing params and return value.
+  - MetarService.java — class Javadoc describing its orchestration role; method Javadoc for getMetar with
+   @param and return behavior including the error case.
+  - MetarResource.java — class Javadoc describing the endpoint and its responsibilities; method Javadoc
+  with @param and all four HTTP response codes documented.
+
+  Would you like me to commit and push these changes as well?
+
+  ✻ Crunched for 39s
+
+──────────────────────────────────────────────────────────────────────────────────────────────
+❯ Yes commit and push 
+───────────────────────────
